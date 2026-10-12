@@ -14,3 +14,7 @@ Painel premium para motorista de aplicativo, consolidando a experiência Runable
 ## Uso
 
 Abra `index.html` no navegador. Para usar GPS e clima real, permita localização e conexão quando solicitado.
+
+## Continuidade em outra IA
+
+Leia primeiro [CONTEXTO-PARA-PROXIMA-IA.md](CONTEXTO-PARA-PROXIMA-IA.md). Ele registra o estado, as fontes, as limitações e as regras para continuar sem reintroduzir a interface antiga.
