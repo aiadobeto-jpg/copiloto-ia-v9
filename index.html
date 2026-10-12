@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Co-piloto.ia V9 | Motor Cognitivo Completo</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --blue: #2563EB; --blue-light: #EFF6FF; --green: #10B981; --green-light: #D1FAE5;
+            --yellow: #F59E0B; --yellow-light: #FEF3C7; --red: #EF4444; --red-light: #FEE2E2;
+            --orange: #F97316; --orange-light: #FFEDD5; --purple: #8B5CF6; --purple-light: #EDE9FE;
+            --bg: #F0F4F8; --surface: #FFFFFF; --border: #E2E8F0; --text: #0F172A;
+            --radius: 18px; --radius-sm: 12px;
+        }
+        body { font-family: system-ui, -apple-system, 'DM Sans', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 90px; }
+        .app-header { background: var(--surface); padding: 12px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 20; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .score-badge { background: var(--blue-light); padding: 4px 12px; border-radius: 40px; font-weight: bold; font-size: 0.85rem; }
+        .container { max-width: 700px; margin: 0 auto; padding: 14px; }
+        .card { background: var(--surface); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .card-title { font-weight: 800; margin-bottom: 12px; border-left: 3px solid var(--blue); padding-left: 12px; }
+        .card-title-purple { border-left-color: var(--purple); }
+        .card-title-green { border-left-color: var(--green); }
+        button { cursor: pointer; border: none; font-weight: 600; border-radius: 40px; padding: 12px 18px; background: var(--blue); color: white; transition: 0.1s; }
+        button:active { transform: scale(0.97); }
+        .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+        .btn-warning { background: var(--yellow); color: white; }
+        .btn-green { background: var(--green); color: white; }
+        .btn-purple { background: var(--purple); color: white; }
+        input, select { width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg); font-size: 0.9rem; }
+        .alerta { padding: 12px; border-radius: 12px; margin: 8px 0; border-left: 3px solid; }
+        .alerta-azul { background: var(--blue-light); border-left-color: var(--blue); }
+        .alerta-verde { background: var(--green-light); border-left-color: var(--green); color: #065F46; }
+        .alerta-vermelho { background: var(--red-light); border-left-color: var(--red); }
+        .alerta-orange { background: var(--orange-light); border-left-color: var(--orange); }
+        .alerta-purple { background: var(--purple-light); border-left-color: var(--purple); }
+        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #0F172A; color: white; padding: 8px 18px; border-radius: 40px; font-size: 0.8rem; opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 999; }
+        .toast.show { opacity: 1; }
+        .btn-panico { position: fixed; bottom: 76px; right: 14px; background: var(--red); border-radius: 50%; width: 56px; height: 56px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; z-index: 200; }
+        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 6px 4px 12px; z-index: 100; overflow-x: auto; }
+        .tab { background: none; border: none; font-size: 0.65rem; font-weight: 700; color: #94A3B8; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 6px; min-width: 60px; }
+        .tab.active { color: var(--blue); background: var(--blue-light); border-radius: 12px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .score-card { background: var(--blue-light); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; margin: 10px 0; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 12px; }
+        .stat-box { background: var(--bg); border-radius: 12px; padding: 12px; text-align: center; border: 1px solid var(--border); }
+        .corrida-item { background: var(--bg); border-radius: 12px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; border-left: 3px solid var(--border); }
+        .previsao-horas { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .previsao-hora { flex: 1; text-align: center; background: var(--bg); border-radius: 12px; padding: 8px; min-width: 70px; }
+        .ocioso-display { font-size: 2rem; font-weight: bold; text-align: center; background: var(--blue-light); border-radius: 12px; padding: 12px; margin: 10px 0; }
+        .ranking-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border); }
+        .conselheiro-resposta { background: var(--bg); padding: 12px; border-radius: 12px; margin-top: 12px; }
+        .bairro-quente { background: var(--green-light); padding: 6px; border-radius: 8px; margin-top: 8px; }
+        .dica-bloco { background: var(--blue-light); border-radius: 12px; padding: 12px; margin: 8px 0; border-left: 3px solid var(--blue); }
+        .ponto-sugestao { background: var(--green-light); border-radius: 12px; padding: 12px; margin: 8px 0; display: flex; justify-content: space-between; align-items: center; }
+        .risco-badge { display: inline-block; padding: 4px 8px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .risco-alto { background: var(--red-light); color: #991B1B; }
+        .risco-medio { background: var(--orange-light); color: #92400E; }
+        .risco-baixo { background: var(--green-light); color: #065F46; }
+        .regra-dia { background: var(--purple-light); border-radius: 12px; padding: 14px; margin: 10px 0; border-left: 4px solid var(--purple); }
+        .relacao-item { display: flex; justify-content: space-between; padding: 10px; background: var(--bg); border-radius: 8px; margin-bottom: 6px; }
+        .badge-impacto { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; }
+        .impacto-altissimo { background: #991B1B; color: white; }
+        .impacto-alto { background: var(--orange); color: white; }
+        .impacto-medio { background: var(--yellow); color: #000; }
+    </style>
+</head>
+<body>
+<div class="app-header">
+    <div><strong>🚖 Co-piloto.ia V9</strong></div>
+    <div><span id="liveClock" style="font-weight:bold;">--:--</span></div>
+    <div><span id="headerScore" class="score-badge">📊 --</span></div>
+    <div id="liveDate" style="font-size:0.7rem; width:100%;"></div>
+</div>
+<div class="container">
+    <div class="card">
+        <div class="card-title">📍 Meu bairro agora</div>
+        <input type="text" id="bairroGlobal" list="listaBairros" placeholder="Digite ou selecione" autocomplete="off">
+        <datalist id="listaBairros"></datalist>
+        <div id="statusConexao" style="font-size:0.7rem; margin-top:8px;">● Offline (modo local) | Motor Cognitivo V9 Completo</div>
+    </div>
+
+    <div class="tab-bar" id="tabBar">
+        <button class="tab active" data-tab="estrategia">🎯 Estratégia</button>
+        <button class="tab" data-tab="turno">💰 Turno</button>
+        <button class="tab" data-tab="eventos">🎪 Eventos</button>
+        <button class="tab" data-tab="destino">📍 Destino</button>
+        <button class="tab" data-tab="clima">🌤️ Clima</button>
+        <button class="tab" data-tab="melhor">🏆 Melhor</button>
+        <button class="tab" data-tab="conselheiro">🧠 Conselheiro</button>
+    </div>
+
+    <!-- Aba Estratégia -->
+    <div id="estrategia" class="tab-content active">
+        <!-- REGRA DO DIA -->
+        <div class="card">
+            <div class="card-title card-title-purple">🧠 Regra do Dia</div>
+            <div id="regraDoDia"></div>
+        </div>
+
+        <!-- Previsão 6 horas -->
+        <div class="card">
+            <div class="card-title">⏱️ Próximas 6 horas</div>
+            <div id="previsaoContainer" class="previsao-horas"></div>
+            <small>Score baseado em horário, bairro, eventos, chuva, temporada</small>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">⚡ Ação Tática</div>
+            <button id="btnAcaoAgora">🎯 ANALISAR & AGIR AGORA</button>
+            <div id="cardDecisao" style="margin-top:12px;"></div>
+            <div class="score-card"><div>Score atual</div><div id="scoreNum">—</div></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">💡 Contexto Atual</div>
+            <div id="dicaContextual"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📍 Ponto Estratégico</div>
+            <div id="pontoSugestao"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">⏱️ Ociosidade</div>
+            <div id="ociosoDisplay" class="ocioso-display">0:00</div>
+            <div style="display:flex; gap:8px;"><button id="btnIniciarOcioso" class="btn-warning">🛑 Estou ocioso</button><button id="btnCorridaAceita" class="btn-green">✅ Corrida aceita</button></div>
+        </div>
+
+        <div class="card"><div class="card-title">🛡️ Alertas de Segurança</div><div id="alertasSeguranca"></div></div>
+        <div class="card"><div class="card-title">⏰ Janelas de Ouro</div><div id="janelasOuro"></div></div>
+
+        <!-- ZONAS MORTAS -->
+        <div class="card">
+            <div class="card-title card-title-green">⚠️ Zonas Mortas Agora</div>
+            <div id="zonasMortas"></div>
+        </div>
+    </div>
+
+    <!-- Aba Turno -->
+    <div id="turno" class="tab-content">
+        <div class="card">
+            <div class="card-title">➕ Registrar corrida</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <input type="number" id="valorCorrida" placeholder="Valor R$" step="0.01" style="flex:1;">
+                <input type="number" id="distanciaCorrida" placeholder="km" step="0.1" style="flex:1;">
+                <input type="text" id="localCorrida" list="listaBairros" placeholder="bairro" style="flex:1.5;">
+            </div>
+            <button id="btnAddCorrida" style="margin-top:8px;">➕ Adicionar</button>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+                <button id="btnVoz" class="btn-secondary">🎤 Voz</button>
+                <button id="btnExportar" class="btn-secondary">📤 Exportar</button>
+                <button id="btnConfigCusto" class="btn-secondary">⚙️ Custo/km</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">📊 Desempenho</div>
+            <div class="stats-grid"><div class="stat-box"><div id="totalReceita">R$0</div><div>Receita</div></div><div class="stat-box"><div id="mediaRpk">0,00</div><div>R$/km</div></div></div>
+            <div class="stats-grid"><div class="stat-box"><div id="totalCorridas">0</div><div>Corridas</div></div><div class="stat-box"><div id="lucroEstimado">R$0</div><div>Lucro</div></div></div>
+            <div id="resumoTurno" class="alerta alerta-azul"></div>
+        </div>
+        <div class="card"><div class="card-title">📋 Histórico</div><div id="listaCorridas"></div><button id="btnLimparCorridas" class="btn-secondary" style="width:100%;">🗑️ Limpar</button></div>
+    </div>
+
+    <!-- Aba Eventos -->
+    <div id="eventos" class="tab-content">
+        <div class="card"><div class="card-title">🎪 Agenda de Eventos</div><div id="listaEventos"></div><button id="btnEventoProximo" class="btn-secondary">📍 Evento mais próximo</button></div>
+        <div class="card"><div class="card-title">➕ Adicionar evento</div><div style="display:flex; flex-wrap:wrap; gap:6px;"><input type="text" id="novoEventoNome" placeholder="Nome"><input type="text" id="novoEventoBairro" list="listaBairros" placeholder="Bairro"></div>
+        <div style="display:flex; gap:6px; margin-top:6px;"><input type="date" id="novoEventoData"><input type="time" id="novoEventoInicio"><input type="time" id="novoEventoFim"></div>
+        <input type="text" id="novoEventoLocal" placeholder="Local" style="margin-top:6px;"><select id="novoEventoImpacto"><option>Altíssimo</option><option>Alto</option><option>Médio</option></select>
+        <input type="text" id="novoEventoDica" placeholder="Dica" style="margin-top:6px;"><button id="btnSalvarEvento" style="margin-top:8px;">💾 Salvar</button><button id="btnLimparEventos" class="btn-secondary" style="margin-top:4px;">🗑️ Remover meus eventos</button></div>
+    </div>
+
+    <!-- Aba Destino -->
+    <div id="destino" class="tab-content">
+        <div class="card">
+            <div class="card-title">⚡ Analisador Turbo</div>
+            <div style="display:flex; gap:8px;"><input type="text" id="turboInput" placeholder="Ex: R$ 18 - 5 km"><button id="btnTurbo">Decidir</button></div>
+            <div id="turboResultado" style="margin-top:8px; display:none;" class="alerta"></div>
+        </div>
+
+        <!-- RELAÇÕES ENTRE BAIRROS -->
+        <div class="card">
+            <div class="card-title card-title-purple">🔗 Relações entre bairros</div>
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="relacaoOrigem" list="listaBairros" placeholder="Origem">
+                <input type="text" id="relacaoDestino" list="listaBairros" placeholder="Destino">
+                <button id="btnConsultarRelacao">Ver relação</button>
+            </div>
+            <div id="resultadoRelacao" style="margin-top:8px;"></div>
+            <small>Tempos reais, efeito da chuva, fluxo dominante</small>
+        </div>
+
+        <div class="card"><div class="card-title">🎯 Analisar corrida</div><input type="text" id="origemDestino" list="listaBairros" placeholder="Origem"><input type="text" id="destinoDestino" list="listaBairros" placeholder="Destino"><input type="number" id="valorDestino" placeholder="Valor (opcional)" step="0.01"><input type="number" id="distanciaDestino" placeholder="Distância km (opcional)" step="0.1"><button id="btnAnalisarDestino">Analisar</button><div id="resultadoAnalise"></div></div>
+        <div class="card"><div class="card-title">📏 Distância entre bairros</div><input type="text" id="distA" list="listaBairros" placeholder="Bairro A"><input type="text" id="distB" list="listaBairros" placeholder="Bairro B"><button id="btnConsultarDist">Ver distância</button><div id="resultadoDist"></div></div>
+    </div>
+
+    <!-- Aba Clima -->
+    <div id="clima" class="tab-content">
+        <div class="card"><div class="card-title">🌦️ Clima agora (Open-Meteo)</div><div id="climaInfo"><div class="alerta alerta-azul">Carregando...</div></div><button id="btnAtualizarClima" class="btn-secondary">🔄 Atualizar</button><small>Dados reais sem API key + previsão offline de chuva</small></div>
+    </div>
+
+    <!-- Aba Melhor Bairro -->
+    <div id="melhor" class="tab-content">
+        <div class="card"><div class="card-title">🏆 Melhor bairro agora (score = demanda + proximidade)</div><div id="rankingMelhor"></div></div>
+    </div>
+
+    <!-- Aba Conselheiro -->
+    <div id="conselheiro" class="tab-content">
+        <div class="card"><div class="card-title">🧠 Conselheiro inteligente</div><input type="text" id="perguntaConselheiro" placeholder="Ex: 'Vale a pena ir para Jurerê agora?' ou 'Fluxo Centro → Trindade?'"><button id="btnPerguntar">Perguntar</button><div id="respostaConselheiro" class="conselheiro-resposta"></div>
+        <details><summary>Exemplos</summary><ul><li>"Vale essa corrida?"</li><li>"Como está Jurerê?"</li><li>"Fluxo Centro → Trindade?"</li><li>"Chuva muda o quê?"</li><li>"Aeroporto agora?"</li><li>"Melhor bairro?"</li></ul></details></div>
+    </div>
+
+    <button class="btn-panico" id="btnPanico">🚨</button>
+    <div id="toastMsg" class="toast"></div>
+</div>
+
+<script>
+// ==================== BASE COGNITIVA OFFLINE COMPLETA ====================
+const BAIRROS = [
+    "Centro","Trindade","Itacorubi","Lagoa da Conceição","Campeche","Rio Tavares",
+    "Jurerê","Jurerê Internacional","Canasvieiras","Ingleses","Barra da Lagoa",
+    "Agronômica","Córrego Grande","Santa Mônica","Aeroporto (FLN)","Saco dos Limões",
+    "Rio Vermelho","Morro das Pedras","Armação","Pântano do Sul","Santo Antônio de Lisboa"
+];
+
+const COORDS = {
+    "Centro":[-27.5969,-48.5495], "Trindade":[-27.5900,-48.5200], "Itacorubi":[-27.5800,-48.5100],
+    "Lagoa da Conceição":[-27.5983,-48.4678], "Campeche":[-27.6700,-48.4800], "Rio Tavares":[-27.6500,-48.4700],
+    "Jurerê":[-27.4415,-48.4795], "Jurerê Internacional":[-27.4420,-48.4850], "Canasvieiras":[-27.4305,-48.4617],
+    "Ingleses":[-27.4291,-48.4132], "Barra da Lagoa":[-27.5700,-48.4240], "Agronômica":[-27.5900,-48.5423],
+    "Córrego Grande":[-27.5800,-48.5000], "Santa Mônica":[-27.5830,-48.5300], "Aeroporto (FLN)":[-27.6705,-48.5495],
+    "Saco dos Limões":[-27.6100,-48.5300], "Rio Vermelho":[-27.4600,-48.4300], "Morro das Pedras":[-27.6800,-48.4600]
+};
+
+// Blocos
+const BLOCOS = ["M2","M3","M4","A1","A2","T1","T2","N1","N2","N3"];
+function getBlocoPorHora(h) {
+    if (h>=6.5 && h<8.5) return "M2";
+    if (h>=8.5 && h<10) return "M3";
+    if (h>=10 && h<12) return "M4";
+    if (h>=12 && h<14) return "A1";
+    if (h>=14 && h<17) return "A2";
+    if (h>=17 && h<19.5) return "T1";
+    if (h>=19.5 && h<22) return "T2";
+    if (h>=22 && h<24) return "N1";
+    if (h>=0 && h<2) return "N2";
+    return "N3";
+}
+function getDiaTipo(date) {
+    const d = date.getDay();
+    if (d===5) return 1; if (d===6) return 2; if (d===0) return 3;
+    return 0;
+}
+
+// FLUXO_BASE (9 bairros nucleares + fallback)
+const FLUXO_BASE = {
+    "Centro":         { util:[8,4,3,9,3,9,5,3,1,0], sexta:[7,4,3,8,3,8,6,5,3,1], sabado:[2,1,2,5,6,4,5,6,4,2], domingo:[1,1,2,4,5,3,3,4,2,0], feriado:[2,1,3,6,7,4,4,5,3,1] },
+    "Trindade":       { util:[9,5,3,7,4,8,6,5,2,0], sexta:[8,4,3,7,4,7,7,6,4,1], sabado:[2,2,2,3,3,3,5,5,4,1], domingo:[1,1,1,2,2,2,3,3,2,0], feriado:[1,1,1,2,2,2,3,3,2,0] },
+    "Itacorubi":      { util:[6,4,3,4,3,5,4,3,1,0], sexta:[5,4,3,4,3,6,5,4,2,0], sabado:[3,2,2,3,3,4,3,2,1,0], domingo:[2,2,2,3,3,3,2,2,1,0], feriado:[3,2,2,3,4,3,2,2,1,0] },
+    "Lagoa da Conceição": { util:[3,2,2,6,4,5,7,8,5,1], sexta:[3,2,3,7,5,6,8,9,8,4], sabado:[4,3,5,8,9,7,8,9,8,6], domingo:[3,3,6,7,8,6,6,6,4,2], feriado:[4,4,7,9,9,7,7,7,6,4] },
+    "Campeche":       { util:[4,3,2,4,4,5,4,3,1,0], sexta:[4,3,3,5,5,6,5,4,2,0], sabado:[5,4,6,8,9,7,6,5,3,1], domingo:[4,4,5,7,8,6,5,4,2,0], feriado:[5,5,6,8,8,7,5,4,2,0] },
+    "Jurerê Internacional": { util:[2,1,1,2,2,3,4,3,2,0], sexta:[2,1,2,3,4,4,5,6,7,6], sabado:[3,2,4,5,8,6,7,8,9,9], domingo:[3,3,5,6,7,5,5,4,3,1], feriado:[4,4,6,7,8,6,6,6,5,3] },
+    "Canasvieiras":   { util:[8,4,3,4,4,5,6,7,3,1], sexta:[7,4,3,5,6,6,7,8,5,3], sabado:[5,4,5,6,9,8,7,8,6,4], domingo:[4,4,6,7,8,7,5,5,3,1], feriado:[5,5,7,8,9,8,6,6,4,2] },
+    "Ingleses":       { util:[9,4,3,4,4,6,5,6,2,0], sexta:[8,4,4,5,6,7,6,7,4,2], sabado:[5,4,6,7,10,9,7,7,5,3], domingo:[4,4,5,7,9,8,4,4,2,0], feriado:[5,5,6,8,9,8,5,4,2,1] },
+    "Aeroporto (FLN)":{ util:[7,4,3,4,3,5,3,2,1,0], sexta:[7,4,4,5,4,5,4,3,2,1], sabado:[6,4,4,6,5,5,4,3,2,1], domingo:[5,4,5,6,5,4,3,2,1,0], feriado:[5,4,6,7,6,5,4,3,2,1] }
+};
+function getFluxoBase(bairro, idx, dia) {
+    const d = FLUXO_BASE[bairro];
+    if (!d) return 5;
+    let arr;
+    if (dia===0) arr = d.util; else if (dia===1) arr = d.sexta; else if (dia===2) arr = d.sabado; else if (dia===3) arr = d.domingo; else arr = d.feriado;
+    return arr[idx] || 5;
+}
+
+// Chuva fator
+function getChuvaFator(bairro, tipo) {
+    if (tipo===0) return 1;
+    const sens = ["Lagoa da Conceição","Campeche","Centro","Rio Tavares"];
+    if (tipo===1) return sens.includes(bairro)?1.3:1.2;
+    if (bairro.includes("Jurerê")) return 0.7;
+    if (bairro==="Itacorubi") return 0.9;
+    return sens.includes(bairro)?1.4:1.2;
+}
+function getEventoFator(bairro, evs) {
+    let f=1;
+    evs.forEach(e=>{ if(e.bairro===bairro) f*= (e.impacto==="Altíssimo"?3:e.impacto==="Alto"?2:1.5); });
+    return f;
+}
+function isAltaTemporada() {
+    const m = new Date().getMonth()+1;
+    const d = new Date().getDate();
+    if (m===12 || m===1 || m===2) return true;
+    if (m===7) return true;
+    if (m===2 && d>=14 && d<=18) return true;
+    return false;
+}
+
+function calcScoreContextual(bairro, date, chuvaTipo, eventosHoje) {
+    const h = date.getHours()+date.getMinutes()/60;
+    const bloco = getBlocoPorHora(h);
+    const idx = BLOCOS.indexOf(bloco);
+    const diaTipo = getDiaTipo(date);
+    let fluxo = getFluxoBase(bairro, idx, diaTipo);
+    const fChuva = getChuvaFator(bairro, chuvaTipo);
+    const fEvento = getEventoFator(bairro, eventosHoje);
+    let score = fluxo * fChuva * fEvento;
+    if (bloco==="M2" || bloco==="T1") score += 1.2;
+    if (bloco==="N2" || bloco==="N3") score += 1.8;
+    if (isAltaTemporada() && (bairro.includes("Jurerê")||bairro==="Canasvieiras"||bairro==="Ingleses"||bairro==="Lagoa da Conceição")) score += 1.5;
+    return Math.min(10, Math.max(1, Math.round(score)));
+}
+
+// ========== RELAÇÕES ENTRE BAIRROS ==========
+const RELACOES_BAIRROS = {
+    "Centro->Trindade": { tempo_normal: "10-20 min", tempo_pico: "20-30 min", efeito_chuva: "+30%", tipo: "curta pendular", fluxo_dominante: "Manhã: Trindade→Centro / Tarde: Centro→Trindade" },
+    "Centro->Itacorubi": { tempo_normal: "12-15 min", tempo_pico: "25-40 min", efeito_chuva: "+40%", tipo: "média corporativa", fluxo_dominante: "Manhã e tarde intenso" },
+    "Centro->Lagoa da Conceição": { tempo_normal: "25-35 min", tempo_pico: "35-50 min", efeito_chuva: "+20%", tipo: "média/longa", fluxo_dominante: "Noite e fins de semana" },
+    "Centro->Campeche": { tempo_normal: "25-40 min", tempo_pico: "40-60 min", efeito_chuva: "+30%", tipo: "longa", fluxo_dominante: "Manhã e noite" },
+    "Centro->Jurerê": { tempo_normal: "30-40 min", tempo_pico: "50-90 min", efeito_chuva: "+50%", tipo: "longa premium", fluxo_dominante: "Noite e eventos" },
+    "Centro->Ingleses": { tempo_normal: "40-50 min", tempo_pico: "60-120 min", efeito_chuva: "+60%", tipo: "longa", fluxo_dominante: "Verão e manhã" },
+    "Centro->Canasvieiras": { tempo_normal: "40-50 min", tempo_pico: "60-100 min", efeito_chuva: "+60%", tipo: "longa turística", fluxo_dominante: "Verão e manhã" },
+    "Trindade->UFSC": { tempo_normal: "5-10 min", tempo_pico: "10-15 min", efeito_chuva: "+50%", tipo: "muito curta", fluxo_dominante: "Aulas manhã/tarde/noite" },
+    "Trindade->Lagoa": { tempo_normal: "15-20 min", tempo_pico: "25-40 min", efeito_chuva: "+30%", tipo: "média", fluxo_dominante: "Noite (lazer)" },
+    "Lagoa->Barra da Lagoa": { tempo_normal: "10 min", tempo_pico: "15-40 min", efeito_chuva: "+30%", tipo: "curta turística", fluxo_dominante: "Praia e verão" },
+    "Campeche->Aeroporto": { tempo_normal: "10-15 min", tempo_pico: "15-25 min", efeito_chuva: "+10%", tipo: "curta/média", fluxo_dominante: "Manhã e noite" },
+    "Aeroporto->Jurerê": { tempo_normal: "40-60 min", tempo_pico: "60-90 min", efeito_chuva: "+30%", tipo: "longa premium", fluxo_dominante: "Alta temporada" },
+    "Jurerê->Centro": { tempo_normal: "30-40 min", tempo_pico: "50-90 min", efeito_chuva: "+50%", tipo: "longa premium", fluxo_dominante: "Madrugada pós-balada" },
+    "Itacorubi->Norte": { tempo_normal: "35-60 min", tempo_pico: "60-120 min", efeito_chuva: "+60%", tipo: "longa", fluxo_dominante: "Final de tarde" }
+};
+function getRelacao(orig, dest) {
+    let k1 = `${orig}->${dest}`, k2 = `${dest}->${orig}`;
+    if (RELACOES_BAIRROS[k1]) return RELACOES_BAIRROS[k1];
+    if (RELACOES_BAIRROS[k2]) return {...RELACOES_BAIRROS[k2], fluxo_dominante: "Sentido inverso. "+RELACOES_BAIRROS[k2].fluxo_dominante};
+    return null;
+}
+
+// ========== REGRAS COMBINADAS ==========
+const REGRAS_COMBINADAS = [
+    (b,h,ch,ev,ds) => ch && h>=6 && h<=9 && b==="Centro" ? "Chuva + Manhã + Centro → Aceitar curtas (até 3 km). Posicionar na Mauro Ramos." : null,
+    (b,h,ch,ev,ds) => ch && h>=17 && h<=19 && b==="Itacorubi" ? "Chuva + Tarde + Itacorubi → RECUSAR corridas para Norte. Aceitar apenas Centro/Trindade." : null,
+    (b,h,ch,ev,ds) => !ch && h>=23 && h<=4 && (ds===5||ds===6) && (b==="Jurerê"||b==="Jurerê Internacional") ? "Madrugada + Jurerê → Aguardar saída do P12. Priorizar corridas longas." : null,
+    (b,h,ch,ev,ds) => ch && b==="Lagoa da Conceição" && h>=14 && h<=17 ? "Chuva + Tarde + Lagoa → Turistas saem mais cedo. Posicionar na entrada." : null,
+    (b,h,ch,ev,ds) => b==="Aeroporto (FLN)" && h>=23 && h<=1 ? "Aeroporto + Noite → Menos oferta, tarifa dinâmica. Posicionar no desembarque." : null,
+    (b,h,ch,ev,ds) => !ch && b==="Campeche" && ds===0 && h>=16 && h<=19 && isAltaTemporada() ? "Domingo + Verão + Campeche → Ficar na Av. Pequeno Príncipe. Famílias voltando da praia." : null,
+    (b,h,ch,ev,ds) => b==="Trindade" && h>=21 && h<=23 && ds>=2 && ds<=4 ? "Noite de semana + Trindade → Saída UFSC às 22h. Posicionar no portão principal." : null
+];
+function getRegrasAtivas(bairro, hora, chuva, eventosHoje, diaSemana) {
+    let ativas = [];
+    REGRAS_COMBINADAS.forEach(r => { let msg = r(bairro, hora, chuva, eventosHoje.length>0, diaSemana); if(msg) ativas.push(msg); });
+    if (ativas.length===0) {
+        const s = calcScoreContextual(bairro, new Date(), chuva?1:0, eventosHoje);
+        if (s>=8) ativas.push(`Demanda ALTA (${s}/10). Saia agora e priorize médias/longas.`);
+        else if (s>=5) ativas.push(`Demanda MÉDIA (${s}/10). Mantenha posição. Evite longas no Norte.`);
+        else ativas.push(`Demanda BAIXA (${s}/10). Considere reposicionar. Use a aba Melhor Bairro.`);
+    }
+    return ativas;
+}
+
+// ========== ZONAS MORTAS ==========
+const ZONAS_MORTAS = [
+    { bairro:"Centro", horario:"14h30-16h", motivo:"Vale pós-almoço. Poucas chamadas." },
+    { bairro:"Trindade", horario:"10h-11h30", motivo:"Aulas em andamento. Baixa demanda." },
+    { bairro:"Lagoa da Conceição", horario:"09h-11h", motivo:"Turistas ainda dormindo." },
+    { bairro:"Jurerê", horario:"10h-11h (baixa temporada)", motivo:"Praia vazia, sem eventos." },
+    { bairro:"Campeche", horario:"10h-16h (inverno)", motivo:"Praia fria, bairro fantasma." }
+];
+function getZonasMortasAtivas(bairro) {
+    const hora = new Date().getHours();
+    const mes = new Date().getMonth();
+    let zonas = [];
+    ZONAS_MORTAS.forEach(z => {
+        if (z.bairro === bairro) {
+            let faixa = z.horario.replace('h','').split('-');
+            if (faixa.length===2) {
+                let h1 = parseInt(faixa[0]), h2 = parseInt(faixa[1]);
+                if (hora >= h1 && hora <= h2) {
+                    if (z.horario.includes('baixa temporada') && !isAltaTemporada()) zonas.push(z);
+                    else if (z.horario.includes('inverno') && (mes>=4 && mes<=9)) zonas.push(z);
+                    else if (!z.horario.includes('baixa') && !z.horario.includes('inverno')) zonas.push(z);
+                }
+            }
+        }
+    });
+    return zonas;
+}
+
+// ========== FERIADOS ==========
+const FERIADOS_ANUAIS = {
+    "2026-01-01": "Ano Novo - madrugada explosiva, manhã morta",
+    "2026-02-16": "Carnaval - Lagoa e Jurerê lotados",
+    "2026-02-17": "Carnaval - continua",
+    "2026-04-03": "Sexta-Feira Santa - êxodo para praias",
+    "2026-04-21": "Tiradentes - praias cheias",
+    "2026-05-01": "Dia do Trabalho - praias moderadas",
+    "2026-09-07": "Independência - desfiles no Centro",
+    "2026-10-12": "N. Sra. Aparecida - turismo aquecido",
+    "2026-11-02": "Finados - cemitérios lotados",
+    "2026-11-15": "Procl. República - turismo médio",
+    "2026-12-25": "Natal - manhã morta, noite familiar",
+    "2026-12-31": "Réveillon - supermercado manhã, festa noite"
+};
+function getFeriadoHoje() {
+    const hoje = new Date().toISOString().slice(0,10);
+    return FERIADOS_ANUAIS[hoje] || null;
+}
+
+// ========== PONTOS ESTRATÉGICOS ==========
+const PONTOS_CONTEXTUAIS = {
+    "Centro": { "M2":"Rua Bocaiúva", "M3":"Av. Mauro Ramos", "M4":"Av. Getúlio Vargas", "A1":"Mercado Público", "A2":"Shopping Beiramar", "T1":"Av. Mauro Ramos sentido bairros", "T2":"Av. Hercílio Luz", "N1":"Praça XV", "N2":"Av. Hercílio Luz", "N3":"Ponte Hercílio Luz" },
+    "Trindade": { "M2":"Av. Madre Benvenuta", "M3":"HU", "M4":"Av. Trompowsky", "A1":"Rua Lauro Linhares", "A2":"Shopping Iguatemi", "T1":"Av. Madre Benvenuta sentido Centro", "T2":"UFSC portão", "N1":"Bares Lauro Linhares", "N2":"Saída UFSC", "N3":"HU" },
+    "Lagoa da Conceição": { "M2":"Av. das Rendeiras", "M3":"Canto dos Araçás", "M4":"Centro", "A1":"Canto dos Araçás", "A2":"Rua João Pacheco", "T1":"Ponte da Barra", "T2":"John Bull", "N1":"Rua João Pacheco", "N2":"John Bull", "N3":"Av. das Rendeiras" },
+    "Jurerê Internacional": { "M2":"Av. dos Búzios", "M3":"Open Shopping", "M4":"Praia", "A1":"Restaurantes beira-mar", "A2":"Café de La Musique", "T1":"Av. dos Búzios", "T2":"P12", "N1":"El Divino", "N2":"Café de La Musique", "N3":"Av. dos Búzios" },
+    "Canasvieiras": { "M2":"Av. das Nações", "M3":"Giassi", "M4":"Hotel Porto Sol", "A1":"Restaurantes praia", "A2":"Praia", "T1":"Av. Canasvieiras sentido SC-401", "T2":"Calçadão", "N1":"Bares Av. das Nações", "N2":"Casa da Água", "N3":"Eixo bares" }
+};
+function getPontoEstrategico(bairro, bloco) {
+    const p = PONTOS_CONTEXTUAIS[bairro];
+    if (p && p[bloco]) return p[bloco];
+    return "Centro do bairro";
+}
+
+// ========== PREVISÃO CHUVA OFFLINE ==========
+const PREVISAO_MENSAL = {
+    "2026-05-07":{chuva:false},"2026-05-08":{chuva:true},"2026-05-09":{chuva:false},"2026-05-10":{chuva:true}
+};
+function temChuvaHoje() {
+    const h = new Date().toISOString().slice(0,10);
+    return PREVISAO_MENSAL[h]?.chuva || false;
+}
+
+// ========== UTILITÁRIOS ==========
+function distanciaEntre(a,b) {
+    if (!a||!b) return null;
+    const ca=COORDS[a], cb=COORDS[b];
+    if(!ca||!cb) return null;
+    const R=6371, dLat=(cb[0]-ca[0])*Math.PI/180, dLon=(cb[1]-ca[1])*Math.PI/180;
+    const lat1=ca[0]*Math.PI/180, lat2=cb[0]*Math.PI/180;
+    const a_=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
+    return Math.round(R*2*Math.atan2(Math.sqrt(a_),Math.sqrt(1-a_)));
+}
+function formatarDistancia(km) {
+    if (km===null) return "--";
+    const m = Math.max(1, Math.floor(km*0.1));
+    return `~${Math.max(0,km-m)}-${km+m} km`;
+}
+function showToast(m,d=2500){const t=document.getElementById('toastMsg'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),d);}
+function setText(id,v){document.getElementById(id).innerText=v;}
+function setHtml(id,v){document.getElementById(id).innerHTML=v;}
+function abrirWaze(loc){window.open(`https://waze.com/ul?q=${encodeURIComponent(loc)},Florianópolis`,'_blank');}
+
+// ========== ESTADO GLOBAL ==========
+let corridas=[], custoPorKm=0.69, ociosoAtivo=false, ociosoInterval=null, _inicioOcioso=Date.now();
+let eventosCustom = [];
+const EVENTOS_FIXOS = [
+    {nome:"Deep Dish @ P12",data:"2026-05-01",hora_inicio:"14:00",hora_fim:"04:00",bairro:"Jurerê Internacional",impacto:"Altíssimo",dica:"Chegada forte 13h"},
+    {nome:"ARVO Festival",data:"2026-05-16",hora_inicio:"14:00",hora_fim:"04:00",bairro:"Canasvieiras",impacto:"Altíssimo",dica:"Saída SC-401 22h+"}
+];
+function getTodosEventos() { return [...EVENTOS_FIXOS, ...eventosCustom]; }
+
+function salvar(){
+    localStorage.setItem('corridas_v9',JSON.stringify(corridas));
+    localStorage.setItem('custo',custoPorKm);
+    localStorage.setItem('bairro',document.getElementById('bairroGlobal').value);
+    localStorage.setItem('eventosC',JSON.stringify(eventosCustom));
+}
+function carregar(){
+    try{
+        const c=localStorage.getItem('corridas_v9'); if(c) corridas=JSON.parse(c);
+        const cp=localStorage.getItem('custo'); if(cp) custoPorKm=parseFloat(cp);
+        const b=localStorage.getItem('bairro'); if(b) document.getElementById('bairroGlobal').value=b;
+        const ec=localStorage.getItem('eventosC'); if(ec) eventosCustom=JSON.parse(ec);
+    }catch(e){}
+}
+
+// ========== RENDERIZAÇÃO PRINCIPAL ==========
+function atualizarTudo() {
+    const bairro = document.getElementById('bairroGlobal').value.trim();
+    if (!bairro) {
+        setHtml('regraDoDia','<div class="alerta alerta-azul">Selecione um bairro</div>');
+        return;
+    }
+    const agora = new Date();
+    const hora = agora.getHours() + agora.getMinutes()/60;
+    const bloco = getBlocoPorHora(hora);
+    const diaSemana = agora.getDay();
+    const chuvaHoje = temChuvaHoje();
+    const chuvaTipo = chuvaHoje?1:0;
+    const eventosHoje = getTodosEventos().filter(e=>e.data===agora.toISOString().slice(0,10));
+    const score = calcScoreContextual(bairro, agora, chuvaTipo, eventosHoje);
+    
+    document.getElementById('headerScore').innerText = `📊 ${score}/10`;
+    document.getElementById('scoreNum').innerText = score;
+    
+    // Previsão 6h
+    let prevHtml = '';
+    for(let i=0;i<6;i++){
+        const f = new Date(agora.getTime()+i*3600000);
+        const s = calcScoreContextual(bairro, f, chuvaTipo, eventosHoje);
+        prevHtml += `<div class="previsao-hora"><div>${f.getHours()}h</div><div>${s}/10</div></div>`;
+    }
+    setHtml('previsaoContainer', prevHtml);
+    
+    // Regra do dia
+    const regras = getRegrasAtivas(bairro, hora, chuvaHoje, eventosHoje, diaSemana);
+    setHtml('regraDoDia', regras.map(r=>`<div class="regra-dia">🧠 ${r}</div>`).join('') || '<div class="regra-dia">Nenhuma regra específica agora.</div>');
+    
+    // Dicas
+    let dicas = [];
+    if (score>=8) dicas.push(`✅ Demanda ALTA (${score}/10). Saia agora.`);
+    else if (score<=3) dicas.push(`⚠️ Demanda BAIXA (${score}/10). Troque de bairro.`);
+    if (eventosHoje.length) dicas.push(`🎪 EVENTO: ${eventosHoje[0].nome} em ${eventosHoje[0].bairro}.`);
+    if (chuvaHoje) dicas.push(`🌧️ CHUVA hoje: aumente tolerância para curtas cobertas.`);
+    const feriado = getFeriadoHoje();
+    if (feriado) dicas.push(`📅 ${feriado}`);
+    setHtml('dicaContextual', dicas.map(d=>`<div class="dica-bloco">${d}</div>`).join(''));
+    
+    // Ponto
+    const ponto = getPontoEstrategico(bairro, bloco);
+    setHtml('pontoSugestao', `<div class="ponto-sugestao"><div><strong>📍 ${ponto}</strong><br><small>Recomendado para ${bloco}</small></div><button onclick="abrirWaze('${ponto}')">Waze</button></div>`);
+    
+    // Risco
+    const risco = {nivel:"baixo",badge:"✅ Seguro"};
+    setHtml('alertasSeguranca', `<div class="alerta alerta-verde"><span class="risco-badge risco-baixo">${risco.badge}</span></div>`);
+    
+    // Janelas de ouro
+    let janelas = [];
+    if (hora>=6 && hora<9) janelas.push("🌅 Pico manhã: trabalhadores.");
+    if (hora>=17 && hora<19) janelas.push("🚗 Saída trabalho: longas para Norte/Sul.");
+    if (hora>=22 || hora<5) janelas.push("🌙 Madrugada: baladas (Jurerê, Lagoa).");
+    if (chuvaHoje) janelas.push("🌧️ CHUVA: curtas explodem.");
+    setHtml('janelasOuro', janelas.map(j=>`<div class="alerta alerta-verde">${j}</div>`).join(''));
+    
+    // Zonas mortas
+    const zonas = getZonasMortasAtivas(bairro);
+    setHtml('zonasMortas', zonas.length?zonas.map(z=>`<div class="alerta alerta-orange">⚠️ ${z.horario} - ${z.motivo}</div>`).join(''):'<div class="alerta alerta-verde">✅ Fora de zona morta.</div>');
+    
+    // Ranking melhor bairro
+    let rank = [];
+    for(let b of BAIRROS) {
+        if(b===bairro) continue;
+        const s = calcScoreContextual(b, agora, chuvaTipo, eventosHoje);
+        const dist = distanciaEntre(bairro, b);
+        if(dist && dist<=30) {
+            const prox = Math.max(0, (30-dist)/30*10);
+            const final = Math.round(s*0.6 + prox*0.4);
+            rank.push({bairro:b, score:final, dist});
+        }
+    }
+    rank.sort((a,b)=>b.score-a.score);
+    setHtml('rankingMelhor', rank.slice(0,10).map(r=>`<div class="ranking-item"><strong>${r.bairro}</strong> - Score ${r.score}/10 · ${formatarDistancia(r.dist)}</div>`).join('') || '<div>Nenhum bairro próximo</div>');
+}
+
+// ========== CORRIDAS ==========
+function renderCorridas(){
+    let html='';
+    const total=corridas.reduce((s,c)=>s+c.valor,0);
+    const mediaRpk=corridas.length?corridas.reduce((s,c)=>s+c.valor/c.distancia,0)/corridas.length:0;
+    const lucro=total - corridas.reduce((s,c)=>s+c.distancia,0)*custoPorKm;
+    setText('totalReceita',`R$${total.toFixed(2)}`);
+    setText('mediaRpk',mediaRpk.toFixed(2));
+    setText('totalCorridas',corridas.length);
+    setText('lucroEstimado',`R$${lucro.toFixed(2)}`);
+    if(corridas.length){
+        const melhor=corridas.reduce((m,c)=>c.valor/c.distancia > m.valor/m.distancia ? c : m);
+        setHtml('resumoTurno',`🏆 Melhor R$/km: R$${(melhor.valor/melhor.distancia).toFixed(2)}`);
+    }
+    corridas.forEach(c=>{
+        const rpk=(c.valor/c.distancia).toFixed(2);
+        const cor=rpk>=2.0?'#D1FAE5':rpk>=1.8?'#FEF3C7':'#FEE2E2';
+        html+=`<div class="corrida-item" style="background:${cor};"><div><strong>R$${c.valor}</strong> • ${c.distancia}km • ${c.local}</div><div>R$${rpk}/km</div></div>`;
+    });
+    setHtml('listaCorridas',html||'<div>Nenhuma corrida</div>');
+}
+function addCorrida(){
+    const v=parseFloat(document.getElementById('valorCorrida').value);
+    const d=parseFloat(document.getElementById('distanciaCorrida').value);
+    const l=document.getElementById('localCorrida').value.trim();
+    if(isNaN(v)||v<=0||isNaN(d)||d<=0) return showToast('❌ Valores inválidos');
+    corridas.push({valor:v,distancia:d,local:l||'?',ts:Date.now()});
+    salvar(); renderCorridas();
+    document.getElementById('valorCorrida').value=''; document.getElementById('distanciaCorrida').value='';
+    showToast('✅ Corrida registrada');
+}
+function exportarDados(){
+    const blob=new Blob([JSON.stringify({corridas,custoPorKm,eventos:eventosCustom})],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
+}
+function configCusto(){
+    const n=prompt('Custo/km atual: R$'+custoPorKm.toFixed(2)); if(n){ let x=parseFloat(n); if(!isNaN(x)&&x>=0){ custoPorKm=x; salvar(); renderCorridas(); showToast('✅ Atualizado');}}
+}
+function iniciarOcioso(){
+    ociosoAtivo=true; _inicioOcioso=Date.now();
+    if(ociosoInterval) clearInterval(ociosoInterval);
+    ociosoInterval=setInterval(()=>{ const min=Math.floor((Date.now()-_inicioOcioso)/60000); setText('ociosoDisplay',`${Math.floor(min/60)}:${String(min%60).padStart(2,'0')}`); },1000);
+}
+function pararOcioso(){ if(ociosoInterval) clearInterval(ociosoInterval); ociosoAtivo=false; setText('ociosoDisplay','0:00'); }
+
+// ========== EVENTOS ==========
+function renderEventos(){
+    let html='';
+    getTodosEventos().forEach(e=>{ html+=`<div class="ranking-item"><strong>${e.nome}</strong><br><small>${e.bairro} • ${e.data}</small><button onclick="abrirWaze('${e.bairro}')">Waze</button></div>`; });
+    setHtml('listaEventos',html||'<div>Nenhum evento</div>');
+}
+function salvarEvento(){
+    const n=document.getElementById('novoEventoNome').value, b=document.getElementById('novoEventoBairro').value, d=document.getElementById('novoEventoData').value, i=document.getElementById('novoEventoInicio').value;
+    if(!n||!b||!d) return showToast('❌ Preencha nome, bairro, data');
+    eventosCustom.push({nome:n,data:d,hora_inicio:i,hora_fim:i,bairro:b,impacto:"Alto",dica:""});
+    salvar(); renderEventos(); showToast('✅ Evento salvo');
+}
+function limparEventos(){ eventosCustom=[]; salvar(); renderEventos(); showToast('✅ Limpo'); }
+
+// ========== DESTINO, TURBO, RELAÇÃO ==========
+function analisarDestino(){
+    const o=document.getElementById('origemDestino').value, d=document.getElementById('destinoDestino').value;
+    if(!o||!d) return;
+    const dist=distanciaEntre(o,d);
+    let html=`<div class="alerta alerta-azul">📍 ${o}→${d}: ${formatarDistancia(dist)}</div>`;
+    const val=parseFloat(document.getElementById('valorDestino').value), km=parseFloat(document.getElementById('distanciaDestino').value);
+    if(!isNaN(val) && !isNaN(km) && km>0){ const rpk=val/km; html+=`<div>💰 R$${rpk.toFixed(2)}/km → ${rpk>=2.0?'✅ ACEITAR':rpk>=1.8?'⚠️ OK':'❌ RECUSAR'}</div>`; }
+    setHtml('resultadoAnalise',html);
+}
+function consultarDist(){
+    const a=document.getElementById('distA').value, b=document.getElementById('distB').value;
+    const d=distanciaEntre(a,b);
+    setHtml('resultadoDist',d!==null?`<div class="alerta alerta-verde">📏 ${a}→${b}: ${formatarDistancia(d)}</div>`:'❌ Bairros inválidos');
+}
+function analisadorTurbo(){
+    const inp=document.getElementById('turboInput').value;
+    const m=inp.match(/[\d,.]+/g);
+    if(!m||m.length<2) return showToast('❌ Formato: R$ 18 - 5');
+    const val=parseFloat(m[0].replace(',','.')), km=parseFloat(m[1].replace(',','.'));
+    if(km<=0) return;
+    const rpk=val/km;
+    const div=document.getElementById('turboResultado');
+    div.innerHTML=`${rpk>=2.0?'✅ ACEITAR':rpk>=1.8?'⚠️ OK':'❌ RECUSAR'} (R$${rpk.toFixed(2)}/km)`;
+    div.style.display='block';
+    div.className = `alerta ${rpk>=2.0?'alerta-verde':rpk>=1.8?'alerta-orange':'alerta-vermelho'}`;
+}
+function consultarRelacao(){
+    const o=document.getElementById('relacaoOrigem').value, d=document.getElementById('relacaoDestino').value;
+    if(!o||!d) return;
+    const r=getRelacao(o,d);
+    const dist=distanciaEntre(o,d);
+    let html='<div class="alerta alerta-purple">';
+    if(r){
+        html+=`<strong>${o} → ${d}</strong><br>⏱️ Normal: ${r.tempo_normal}<br>🚗 Pico: ${r.tempo_pico}<br>🌧️ Chuva: ${r.efeito_chuva}<br>📊 Tipo: ${r.tipo}<br>🔄 ${r.fluxo_dominante}`;
+    } else {
+        html+=`⚠️ Relação não mapeada. Distância: ${formatarDistancia(dist)}`;
+    }
+    html+='</div>';
+    setHtml('resultadoRelacao',html);
+}
+function carregarClima(){
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=-27.5969&longitude=-48.5495&current_weather=true')
+    .then(r=>r.json()).then(d=>{ const t=Math.round(d.current_weather.temperature); setHtml('climaInfo',`<div class="alerta alerta-azul">🌡️ ${t}°C • Vento ${Math.round(d.current_weather.wind_speed)}km/h</div>`); })
+    .catch(()=>setHtml('climaInfo','<div class="alerta alerta-vermelho">Erro clima</div>'));
+}
+function fazerPergunta(){
+    const p=document.getElementById('perguntaConselheiro').value.toLowerCase();
+    const bairroAtual=document.getElementById('bairroGlobal').value.trim();
+    if(!bairroAtual) return setHtml('respostaConselheiro','<div class="alerta alerta-azul">Selecione bairro primeiro</div>');
+    const agora=new Date();
+    const chuvaTipo = temChuvaHoje()?1:0;
+    const evs = getTodosEventos().filter(e=>e.data===agora.toISOString().slice(0,10));
+    let resp = '';
+    if(p.includes('jurerê')||p.includes('canas')||p.includes('centro')){
+        let alvo = "Centro";
+        if(p.includes('jurerê')) alvo = "Jurerê Internacional";
+        else if(p.includes('canas')) alvo = "Canasvieiras";
+        const s = calcScoreContextual(alvo, agora, chuvaTipo, evs);
+        resp = `📊 ${alvo}: score ${s}/10. ${s>=8?'Alta demanda!':s>=5?'Razoável':'Baixo movimento.'}`;
+    } else if(p.includes('sair')){
+        const s = calcScoreContextual(bairroAtual, agora, chuvaTipo, evs);
+        resp = s>=8?'✅ Sim, saia agora! Demanda alta.':s>=5?'⏳ Demanda média, pode sair.':'🔴 Melhor esperar ou trocar de bairro.';
+    } else if(p.includes('fluxo')||p.includes('relação')){
+        const bairrosNaPergunta = BAIRROS.filter(b => p.includes(b.toLowerCase()));
+        if(bairrosNaPergunta.length>=2){
+            const r = getRelacao(bairrosNaPergunta[0], bairrosNaPergunta[1]);
+            if(r) resp = `🔗 ${bairrosNaPergunta[0]}→${bairrosNaPergunta[1]}: ${r.fluxo_dominante}. Tempo normal: ${r.tempo_normal}.`;
+            else resp = `ℹ️ Relação não mapeada. Distância aproximada: ${formatarDistancia(distanciaEntre(bairrosNaPergunta[0],bairrosNaPergunta[1]))}`;
+        } else resp = 'Digite dois bairros. Ex: "Fluxo Centro → Trindade"';
+    } else if(p.includes('chuva')){
+        resp = temChuvaHoje() ? '🌧️ Hoje tem chuva: corridas curtas explodem, evite SC-401 no pico.' : '☀️ Sem chuva hoje. Comportamento normal.';
+    } else if(p.includes('aeroporto')){
+        resp = '✈️ Aeroporto: picos 5h-8h (partidas), 11h-14h (chegadas), 19h-23h (noturnos). Melhor horário 11h-14h.';
+    } else if(p.includes('melhor')){
+        const rank = [];
+        for(let b of BAIRROS) if(b!==bairroAtual) { const s = calcScoreContextual(b, agora, chuvaTipo, evs); const dist = distanciaEntre(bairroAtual,b); if(dist && dist<=30) rank.push({bairro:b, score:Math.round(s*0.6 + ((30-dist)/30*10)*0.4)}); }
+        rank.sort((a,b)=>b.score-a.score);
+        resp = rank.length ? `🏆 Melhor bairro agora: ${rank[0].bairro} (score ${rank[0].score}/10)` : 'Nenhum bairro próximo.';
+    } else {
+        resp = '🤔 Exemplos: "Como está Jurerê?", "Fluxo Centro → Trindade?", "Chuva hoje?", "Aeroporto?", "Melhor bairro?"';
+    }
+    setHtml('respostaConselheiro',`<div class="alerta alerta-azul">${resp}</div>`);
+    document.getElementById('perguntaConselheiro').value='';
+}
+function acionarPanico(){
+    if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(pos=>{ window.open(`https://wa.me/?text=🚨 EMERGÊNCIA! Local: https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`,'_blank'); },()=>showToast('❌ Geoloc negada'));
+    } else showToast('❌ Sem GPS');
+}
+
+// ========== INICIALIZAÇÃO ==========
+window.addEventListener('DOMContentLoaded',()=>{
+    carregar();
+    const dl=document.getElementById('listaBairros');
+    BAIRROS.forEach(b=>{const opt=document.createElement('option'); opt.value=b; dl.appendChild(opt);});
+    setInterval(()=>{ const n=new Date(); setText('liveClock',n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})); setText('liveDate',n.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})); },1000);
+    document.querySelectorAll('.tab').forEach(tab=>{
+        tab.addEventListener('click',()=>{
+            document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.add('active');
+        });
+    });
+    document.getElementById('btnAcaoAgora').addEventListener('click',()=>{ const s=document.getElementById('scoreNum').innerText; alert(`Score: ${s}/10. ${s>=8?'Saia agora!':s>=5?'Médio':'Baixo'}`); });
+    document.getElementById('btnAddCorrida').addEventListener('click',addCorrida);
+    document.getElementById('btnExportar').addEventListener('click',exportarDados);
+    document.getElementById('btnConfigCusto').addEventListener('click',configCusto);
+    document.getElementById('btnLimparCorridas').addEventListener('click',()=>{corridas=[]; salvar(); renderCorridas(); showToast('✅ Limpo');});
+    document.getElementById('btnSalvarEvento').addEventListener('click',salvarEvento);
+    document.getElementById('btnLimparEventos').addEventListener('click',limparEventos);
+    document.getElementById('btnAnalisarDestino').addEventListener('click',analisarDestino);
+    document.getElementById('btnConsultarDist').addEventListener('click',consultarDist);
+    document.getElementById('btnConsultarRelacao').addEventListener('click',consultarRelacao);
+    document.getElementById('btnTurbo').addEventListener('click',analisadorTurbo);
+    document.getElementById('btnAtualizarClima').addEventListener('click',carregarClima);
+    document.getElementById('btnIniciarOcioso').addEventListener('click',iniciarOcioso);
+    document.getElementById('btnCorridaAceita').addEventListener('click',pararOcioso);
+    document.getElementById('btnPerguntar').addEventListener('click',fazerPergunta);
+    document.getElementById('btnPanico').addEventListener('click',acionarPanico);
+    document.getElementById('bairroGlobal').addEventListener('input',()=>{salvar(); atualizarTudo();});
+    document.getElementById('bairroGlobal').addEventListener('change',()=>{salvar(); atualizarTudo();});
+    if('webkitSpeechRecognition' in window){
+        const rec=new webkitSpeechRecognition(); rec.lang='pt-BR';
+        document.getElementById('btnVoz').addEventListener('click',()=>{ rec.start(); rec.onresult=(e)=>document.getElementById('perguntaConselheiro').value=e.results[0][0].transcript; });
+    } else document.getElementById('btnVoz').style.display='none';
+    atualizarTudo();
+    renderCorridas();
+    renderEventos();
+    carregarClima();
+});
+</script>
+</body>
+</html>
