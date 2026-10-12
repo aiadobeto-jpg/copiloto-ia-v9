@@ -16,6 +16,8 @@ A tela Agora apresenta check-up, score estimado, ação recomendada, quatro melh
 
 O botão de GPS tenta selecionar o bairro mais próximo da posição do aparelho. O clima é consultado pelo Open-Meteo quando há internet; em caso de falha, o app informa que está offline. A atualização automática ocorre a cada minuto.
 
+Na área Perguntar também estão preservadas as ferramentas que existiam na versão anterior: análise de corrida por valor/km, cálculo de líquido após custo/km, regra ajustável para aceitar/avaliar/recusar, configuração persistente de custo por km, distância aproximada entre bairros, temporizador de tempo ocioso e exportação de backup do turno. Essas ferramentas usam dados informados pelo motorista e coordenadas aproximadas; não têm acesso a trânsito, tarifa ou oferta em tempo real da Uber, 99 ou inDrive.
+
 ## Agenda de eventos
 
 A base atual contém 23 referências de eventos, com 22 ativos ou futuros na data da última atualização. Os eventos encerrados são filtrados da agenda operacional. As fontes usadas foram:
@@ -42,6 +44,7 @@ Não afirmar que um evento é garantido. A agenda vem de páginas públicas e po
 - Não apresentar estimativas como certezas.
 - Não remover as fontes dos eventos.
 - Não trocar o arquivo único por uma aplicação que dependa de backend sem explicar a mudança.
+- Não remover as ferramentas de decisão de corrida, distância, custo/km, ociosidade ou exportação de backup ao reorganizar a interface.
 
 ## Próximas evoluções possíveis
 
