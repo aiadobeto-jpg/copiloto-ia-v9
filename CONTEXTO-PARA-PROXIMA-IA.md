@@ -5,7 +5,7 @@
 Este repositório contém a versão atual do Co-piloto.ia para Florianópolis. A versão está publicada no GitHub e foi revisada em 12/10/2026.
 
 Repositório: https://github.com/aiadobeto-jpg/copiloto-ia-v9
-Commit atual: 7701cc2
+Commit atual antes desta continuação: ff7cad6; o próximo commit inclui a validação final das ferramentas restauradas.
 Arquivo principal: `index.html`
 
 ## O que existe agora
@@ -16,7 +16,7 @@ A tela Agora apresenta check-up, score estimado, ação recomendada, quatro melh
 
 O botão de GPS tenta selecionar o bairro mais próximo da posição do aparelho. O clima é consultado pelo Open-Meteo quando há internet; em caso de falha, o app informa que está offline. A atualização automática ocorre a cada minuto.
 
-Na área Perguntar também estão preservadas as ferramentas que existiam na versão anterior: análise de corrida por valor/km, cálculo de líquido após custo/km, regra ajustável para aceitar/avaliar/recusar, configuração persistente de custo por km, distância aproximada entre bairros, temporizador de tempo ocioso e exportação de backup do turno. Essas ferramentas usam dados informados pelo motorista e coordenadas aproximadas; não têm acesso a trânsito, tarifa ou oferta em tempo real da Uber, 99 ou inDrive.
+Na área Perguntar também estão preservadas as ferramentas que existiam na versão anterior: análise de corrida por valor/km, cálculo de líquido após custo/km, regra ajustável para aceitar/avaliar/recusar, configuração persistente de custo por km, distância aproximada entre bairros, temporizador de tempo ocioso e exportação de backup do turno. Essas ferramentas foram testadas no navegador com uma corrida de R$18 em 8 km e retornaram R$2,25/km, líquido estimado de R$12,00 e decisão ACEITAR. O cálculo Centro → Trindade retornou aproximadamente 3,0 km em linha geográfica. Essas ferramentas usam dados informados pelo motorista e coordenadas aproximadas; não têm acesso a trânsito, tarifa ou oferta em tempo real da Uber, 99 ou inDrive.
 
 ## Agenda de eventos
 
